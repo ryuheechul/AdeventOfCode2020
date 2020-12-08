@@ -1,20 +1,37 @@
 mod sumer;
 
 use sumer::Sumer;
+use sumer::Sumer3;
 
 fn main() -> Result<(), ()> {
   let input = read_from_file("./input.txt")?;
+  let input = input.as_slice();
   let desired_sum = 2020;
 
-  let mut s = Sumer::new(input.as_slice());
-
-  if let Some(m) = s.find_product(desired_sum) {
-    println!("the answer is {}!", m);
-  } else {
-    eprintln!("sorry there are no multiples found");
-  }
+  step1(input, desired_sum);
+  step2(input, desired_sum);
 
   Ok(())
+}
+
+fn step1(input: &[u32], desired_sum: u32) {
+  let mut s = Sumer::new(input);
+
+  if let Some(m) = s.find_product(desired_sum) {
+    println!("[step 1] the answer is {}!", m);
+  } else {
+    eprintln!("[step 1] sorry there are no multiples found");
+  }
+}
+
+fn step2(input: &[u32], desired_sum: u32) {
+  let mut s = Sumer3::new(input);
+
+  if let Some(m) = s.find_product(desired_sum) {
+    println!("[step 2] the answer is {}!", m);
+  } else {
+    eprintln!("[step 2] sorry there are no multiples found");
+  }
 }
 
 use std::fs::File;

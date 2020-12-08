@@ -51,31 +51,48 @@ impl Sumer {
     }
   }
 
-  pub fn find_product(&mut self, sum: u32) -> Option<u32> {
-    let action_sum = self.sum();
+  pub fn find_product(&mut self, target_sum: u32) -> Option<u32> {
+    let sum_of_h_t = self.sum();
 
-    if action_sum == sum {
-      return Some(self.product())
+    if sum_of_h_t == target_sum {
+      return Some(self.product());
     }
 
     if !self.check_if_possible_to_advance() {
-      return None
+      return None;
     }
 
-    if action_sum > sum {
+    if sum_of_h_t > target_sum {
       self.advance_tail();
     } else {
       self.advance_head();
     }
 
-    self.find_product(sum)
+    self.find_product(target_sum)
+  }
+}
+
+pub struct Sumer3 {
+  list: Vec<u32>,
+}
+
+impl Sumer3 {
+  pub fn new(list: &[u32]) -> Self {
+    let mut l: Vec<_> = list.iter().copied().collect();
+    l.sort();
+
+    Sumer3 { list: l }
   }
 
-  // pub fn inspect(&self) {
-  //   println!("head: {}", self.head);
-  //   println!("value at head: {}", self.value_at(self.head));
-  //   println!("tail: {}", self.tail);
-  //   println!("value at tail: {}", self.value_at(self.tail));
-  //   println!("sum: {}", self.sum());
-  // }
+  pub fn find_product(&mut self, target_sum: u32) -> Option<u32> {
+    for n in &self.list {
+      let mut s = Sumer::new(&self.list[..]);
+
+      if let Some(m) = s.find_product(target_sum - n) {
+        return Some(m * n);
+      }
+    }
+
+    None
+  }
 }
