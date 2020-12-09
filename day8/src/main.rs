@@ -2,9 +2,9 @@
 
 fn main() {
   let dum = dummy();
-  let tokens = tokenize(dum);
+  let insts = parse_instructions(dum);
 
-  match acc_just_before_limbo(vec![], 0, 0, tokens) {
+  match acc_just_before_limbo(vec![], 0, 0, insts) {
     Some(acc) => println!("Immediately before the program would run an instruction a second time, the value in the accumulator is {:?}", acc),
     None => println!("I think pointer reached the end of the instructions or something went wrong."),
   }
@@ -63,33 +63,37 @@ impl Instruction {
   }
 }
 
-fn tokenize(v: Vec<String>) -> Vec<Instruction> {
-  v.iter().map(|l| line_to_token(l)).collect()
+use std::convert::From;
+
+impl From<&String> for Instruction {
+  fn from(l: &String) -> Self {
+    let tokens: Vec<&str> = l.split(' ').collect(); // assume it's always one spacebar for now
+
+    let op = tokens[0];
+    let operand = tokens[1];
+
+    let sign = operand.chars().next().unwrap();
+
+    let number: String = operand.chars().skip(1).collect();
+    let number = number.parse::<i16>().unwrap();
+
+    let operand = match sign {
+      '+' => number,
+      _ => number * -1, // assuming it's always '-'
+    };
+
+    let op = match op {
+      "acc" => Op::Acc,
+      "jmp" => Op::Jmp,
+      _ => Op::Nop, // assuming it is always "nop"
+    };
+
+    Instruction { op, operand }
+  }
 }
 
-fn line_to_token(l: &str) -> Instruction {
-  let tokens: Vec<&str> = l.split(' ').collect(); // assume it's always one spacebar for now
-
-  let op = tokens[0];
-  let operand = tokens[1];
-
-  let sign = operand.chars().next().unwrap();
-
-  let number: String = operand.chars().skip(1).collect();
-  let number = number.parse::<i16>().unwrap();
-
-  let operand = match sign {
-    '+' => number,
-    _ => number * -1, // assuming it's always '-'
-  };
-
-  let op = match op {
-    "acc" => Op::Acc,
-    "jmp" => Op::Jmp,
-    _ => Op::Nop, // assuming it is always "nop"
-  };
-
-  Instruction { op, operand }
+fn parse_instructions(v: Vec<String>) -> Vec<Instruction> {
+  v.iter().map(Instruction::from).collect()
 }
 
 fn dummy() -> Vec<String> {
