@@ -1,20 +1,19 @@
-//TODO: use input file
+fn main() -> Result<(), ()> {
+  let insts = parse_instructions_from_file("./input.txt")?;
 
-fn main() {
-  let dum = dummy();
-  let insts = parse_instructions(dum);
-
-  match acc_just_before_limbo(vec![], 0, 0, insts) {
+  match acc_just_before_limbo(vec![], 0, 0, &insts) {
     Some(acc) => println!("Immediately before the program would run an instruction a second time, the value in the accumulator is {:?}", acc),
     None => println!("I think pointer reached the end of the instructions or something went wrong."),
   }
+
+  Ok(())
 }
 
 fn acc_just_before_limbo(
-  been_there: Vec<u8>,
+  been_there: Vec<u16>,
   acc: i16,
   pointer: isize,
-  insts: Vec<Instruction>,
+  insts: &[Instruction],
 ) -> Option<i16> {
   if pointer < 0 {
     return None;
@@ -34,7 +33,7 @@ fn acc_just_before_limbo(
     return None;
   }
 
-  let pointer: u8 = p as u8;
+  let pointer: u16 = p as u16;
 
   if been_there.contains(&pointer) {
     Some(acc)
@@ -92,15 +91,27 @@ impl From<&String> for Instruction {
   }
 }
 
-fn parse_instructions(v: Vec<String>) -> Vec<Instruction> {
+fn parse_instructions(v: &[String]) -> Vec<Instruction> {
   v.iter().map(Instruction::from).collect()
 }
 
-fn dummy() -> Vec<String> {
-  vec![
-    "nop +0", "acc +1", "jmp +4", "acc +3", "jmp -3", "acc -99", "acc +1", "jmp -4", "acc +6",
-  ]
-  .iter()
-  .map(|&s| s.into())
-  .collect()
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
+
+// copied and pasted from https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html
+fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+  P: AsRef<Path>,
+{
+  let file = File::open(filename)?;
+  Ok(io::BufReader::new(file).lines())
+}
+
+fn parse_instructions_from_file(filename: &str) -> Result<Vec<Instruction>, ()> {
+  read_lines(filename).map(|lines| {
+    let lines: Vec<String> = lines.map(|l| l.unwrap()).collect();
+    parse_instructions(&lines)
+  })
+    .or(Err(()))
 }
