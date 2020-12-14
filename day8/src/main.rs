@@ -1,22 +1,75 @@
+mod inst;
+
+use inst::{Instruction, Op};
+use std::mem;
+
 fn main() -> Result<(), ()> {
   let insts = parse_instructions_from_file("./input.txt")?;
 
-  match acc_just_before_limbo(vec![], 0, 0, &insts) {
-    Some(acc) => println!("Immediately before the program would run an instruction a second time, the value in the accumulator is {:?}", acc),
-    None => println!("I think pointer reached the end of the instructions or something went wrong."),
-  }
+  part1(&insts);
+  part2(&insts);
 
   Ok(())
 }
 
-fn acc_just_before_limbo(
-  been_there: Vec<u16>,
-  acc: i16,
-  pointer: isize,
-  insts: &[Instruction],
-) -> Option<i16> {
+fn part1(insts: &[Instruction]) {
+  match calc_acc(vec![], 0, 0, insts) {
+    Acc::JustBeforeLimbo(acc) => println!("[part1 - right] Immediately before the program would run an instruction a second time, the value in the accumulator is {:?}", acc),
+    Acc::AfterDone(acc) => println!("[part1 - wrong] ran all the instructions, the value in the accumulator is {:?}", acc),
+    Acc::WentWrong => println!("[part1 - wrong] I think pointer reached the end of the instructions or something went wrong."),
+  };
+}
+
+fn part2(insts: &[Instruction]) {
+  for (idx, inst) in insts.iter().enumerate() {
+    let to_swap = match inst.op {
+      Op::Nop => Op::Jmp,
+      Op::Jmp => Op::Nop,
+      Op::Acc => Op::Acc,
+    };
+
+    if to_swap == Op::Acc {
+      continue;
+    }
+
+    let modified = replace_instruction(
+      insts,
+      idx,
+      Instruction {
+        op: to_swap,
+        operand: inst.operand,
+      },
+    );
+
+    match calc_acc(vec![], 0, 0, &modified) {
+      Acc::JustBeforeLimbo(acc) => println!("[part2 - wrong] Immediately before the program would run an instruction a second time, the value in the accumulator is {:?}", acc),
+      Acc::AfterDone(acc) => {
+        println!("[part2 - right] ran all the instructions, the value in the accumulator is {:?}", acc);
+        return;
+      }
+      Acc::WentWrong => println!("[part2 - wrong] I think pointer reached the end of the instructions or something went wrong."),
+    };
+  }
+}
+
+fn replace_instruction(insts: &[Instruction], index: usize, inst: Instruction) -> Vec<Instruction> {
+  let mut copy = insts.to_vec();
+  let item = &mut copy[index];
+
+  let _ = mem::replace(item, inst);
+
+  copy
+}
+
+enum Acc {
+  JustBeforeLimbo(i16),
+  AfterDone(i16),
+  WentWrong,
+}
+
+fn calc_acc(been_there: Vec<u16>, acc: i16, pointer: isize, insts: &[Instruction]) -> Acc {
   if pointer < 0 {
-    return None;
+    return Acc::WentWrong;
   }
 
   let pointer: usize = pointer as usize;
@@ -29,65 +82,21 @@ fn acc_just_before_limbo(
     Op::Jmp => (acc, pointer as isize + operand as isize),
   };
 
-  if p >= insts.len() as isize - 1 || p < 0 {
-    return None;
+  if p < 0 {
+    return Acc::WentWrong;
+  }
+
+  if p >= insts.len() as isize - 1 {
+    return Acc::AfterDone(a as i16);
   }
 
   let pointer: u16 = p as u16;
 
   if been_there.contains(&pointer) {
-    Some(acc)
+    Acc::JustBeforeLimbo(a as i16)
   } else {
     let been_there = [been_there, vec![pointer]].concat();
-    acc_just_before_limbo(been_there, a, p, insts)
-  }
-}
-
-#[derive(Debug, Copy, Clone)]
-enum Op {
-  Nop,
-  Acc,
-  Jmp,
-}
-
-#[derive(Debug)]
-struct Instruction {
-  op: Op,
-  operand: i16,
-}
-
-impl Instruction {
-  fn values(&self) -> (Op, i16) {
-    (self.op, self.operand)
-  }
-}
-
-use std::convert::From;
-
-impl From<&String> for Instruction {
-  fn from(l: &String) -> Self {
-    let tokens: Vec<&str> = l.split(' ').collect(); // assume it's always one spacebar for now
-
-    let op = tokens[0];
-    let operand = tokens[1];
-
-    let sign = operand.chars().next().unwrap();
-
-    let number: String = operand.chars().skip(1).collect();
-    let number = number.parse::<i16>().unwrap();
-
-    let operand = match sign {
-      '+' => number,
-      _ => number * -1, // assuming it's always '-'
-    };
-
-    let op = match op {
-      "acc" => Op::Acc,
-      "jmp" => Op::Jmp,
-      _ => Op::Nop, // assuming it is always "nop"
-    };
-
-    Instruction { op, operand }
+    calc_acc(been_there, a, p, insts)
   }
 }
 
@@ -109,9 +118,10 @@ where
 }
 
 fn parse_instructions_from_file(filename: &str) -> Result<Vec<Instruction>, ()> {
-  read_lines(filename).map(|lines| {
-    let lines: Vec<String> = lines.map(|l| l.unwrap()).collect();
-    parse_instructions(&lines)
-  })
+  read_lines(filename)
+    .map(|lines| {
+      let lines: Vec<String> = lines.map(|l| l.unwrap()).collect();
+      parse_instructions(&lines)
+    })
     .or(Err(()))
 }
