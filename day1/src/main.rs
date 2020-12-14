@@ -8,29 +8,29 @@ fn main() -> Result<(), ()> {
   let input = input.as_slice();
   let desired_sum = 2020;
 
-  step1(input, desired_sum);
-  step2(input, desired_sum);
+  part1(input, desired_sum);
+  part2(input, desired_sum);
 
   Ok(())
 }
 
-fn step1(input: &[u32], desired_sum: u32) {
+fn part1(input: &[u32], desired_sum: u32) {
   let mut s = Sumer::new(input);
 
   if let Some(m) = s.find_product(desired_sum) {
-    println!("[step 1] the answer is {}!", m);
+    println!("[part 1] the answer is {}!", m);
   } else {
-    eprintln!("[step 1] sorry there are no multiples found");
+    eprintln!("[part 1] sorry there are no multiples found");
   }
 }
 
-fn step2(input: &[u32], desired_sum: u32) {
+fn part2(input: &[u32], desired_sum: u32) {
   let mut s = Sumer3::new(input);
 
   if let Some(m) = s.find_product(desired_sum) {
-    println!("[step 2] the answer is {}!", m);
+    println!("[part 2] the answer is {}!", m);
   } else {
-    eprintln!("[step 2] sorry there are no multiples found");
+    eprintln!("[part 2] sorry there are no multiples found");
   }
 }
 
