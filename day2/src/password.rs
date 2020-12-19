@@ -22,6 +22,19 @@ impl PasswordPolicy {
 
     min <= count && count <= max
   }
+
+  fn validate_part2_for(&self, pw: &str) -> bool {
+    let min: usize = self.min as usize - 1;
+    let max: usize = self.max as usize - 1;
+
+    let f = pw.chars().nth(min).unwrap();
+    let s = pw.chars().nth(max).unwrap();
+
+    let all: String = vec![f, s].iter().collect();
+    let count = all.chars().filter(|&c| c == self.charactor).count();
+
+    count == 1
+  }
 }
 
 impl From<&str> for PasswordPolicy {
@@ -60,6 +73,10 @@ impl From<&str> for PasswordValidation {
 impl PasswordValidation {
   pub fn is_valid(&self) -> bool {
     self.policy.validate_for(&self.pw)
+  }
+
+  pub fn is_valid_part2(&self) -> bool {
+    self.policy.validate_part2_for(&self.pw)
   }
 }
 

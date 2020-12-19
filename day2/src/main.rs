@@ -7,7 +7,17 @@ fn main() -> Result<(), ()> {
 
   let count = validations.iter().filter(|v| v.is_valid()).count();
 
-  println!("the number of valid password from the input.txt is {}", count);
+  println!(
+    "[part 1] the number of valid password from the input.txt is {}",
+    count
+  );
+
+  let count = validations.iter().filter(|v| v.is_valid_part2()).count();
+
+  println!(
+    "[part 2] the number of valid password from the input.txt is {}",
+    count
+  );
 
   Ok(())
 }
