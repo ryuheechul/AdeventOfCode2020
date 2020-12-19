@@ -1,18 +1,36 @@
 mod map;
 
-use map::Map;
-use map::Row;
-use map::Slope;
+use map::{Map, Row, Slope};
 
 fn main() -> Result<(), ()> {
   let mut map = parse_map_from_file("./input.txt")?;
+
+  part1(&mut map);
+  part2(&mut map);
+  Ok(())
+}
+
+fn part1(map: &mut Map) {
   let slope = Slope::new(3, 1);
 
   let count = map.count_trees(slope);
 
-  println!("the number of trees encountered is {}", count);
+  println!("[part 1] the number of trees encountered is {}", count);
 
-  Ok(())
+}
+
+fn part2(map: &mut Map) {
+  let slopes: Vec<Slope> = vec![
+    Slope::new(1, 1),
+    Slope::new(3, 1),
+    Slope::new(5, 1),
+    Slope::new(7, 1),
+    Slope::new(1, 2),
+  ];
+
+  let count: usize = slopes.iter().map(|&s| map.count_trees(s)).product();
+
+  println!("[part 2] the product of trees encountered is {}", count);
 }
 
 use std::fs::File;
