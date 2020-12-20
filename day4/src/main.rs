@@ -1,18 +1,24 @@
+#[macro_use]
+extern crate vec_box;
+
+mod field;
 mod passport;
 
-use passport::Passport;
+use passport::{PartFlag, Passport};
 
 fn main() -> Result<(), ()> {
-  let passports = parse_passports_from_file("./input.txt")?;
+  let (p1, p2) = parse_passports_from_file("./input.txt")?;
 
-  part1(passports);
+  passport_count(p1, 1);
+  passport_count(p2, 2);
+
   Ok(())
 }
 
-fn part1(passports: Vec<Passport>) {
+fn passport_count(passports: Vec<Passport>, n: u8) {
   let count = passports.iter().filter(|p| p.is_valid()).count();
 
-  println!("[part 1] the number of valid passports is {}", count);
+  println!("[part {}] the number of valid passports is {}", n, count);
 }
 
 use std::fs::File;
@@ -28,14 +34,16 @@ where
   Ok(io::BufReader::new(file).lines())
 }
 
-fn parse_passport(v: &[String]) -> Vec<Passport> {
+fn parse_passport(v: &[String]) -> (Vec<Passport>, Vec<Passport>) {
   let mut passport_line = "".to_string();
-  let mut passports: Vec<Passport> = vec![];
+  let mut passports_part1: Vec<Passport> = vec![];
+  let mut passports_part2: Vec<Passport> = vec![];
 
   for line in v {
     match line.len() {
       0 => {
-        passports.push(Passport::new(&passport_line));
+        passports_part1.push(Passport::new(&passport_line, PartFlag::Flag1));
+        passports_part2.push(Passport::new(&passport_line, PartFlag::Flag2));
         passport_line = "".into();
       }
       _ => {
@@ -45,12 +53,13 @@ fn parse_passport(v: &[String]) -> Vec<Passport> {
     }
   }
 
-  passports.push(Passport::new(&passport_line));
+  passports_part1.push(Passport::new(&passport_line, PartFlag::Flag1));
+  passports_part2.push(Passport::new(&passport_line, PartFlag::Flag2));
 
-  passports
+  (passports_part1, passports_part2)
 }
 
-fn parse_passports_from_file(filename: &str) -> Result<Vec<Passport>, ()> {
+fn parse_passports_from_file(filename: &str) -> Result<(Vec<Passport>, Vec<Passport>), ()> {
   read_lines(filename)
     .map(|lines| {
       let lines: Vec<String> = lines.map(|l| l.unwrap()).collect();
