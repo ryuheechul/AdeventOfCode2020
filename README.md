@@ -1,2 +1,2 @@
 # AdventOfCode2020
-new progress shall continue at https://github.com/ryuheechul/advent-of-code
+new progresses shall continue at https://github.com/ryuheechul/advent-of-code
